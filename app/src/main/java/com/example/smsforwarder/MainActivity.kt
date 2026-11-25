@@ -3,6 +3,7 @@ package com.example.smsforwarder
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
 import android.widget.Toast
@@ -13,39 +14,45 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val prefs = getSharedPreferences("cfg", MODE_PRIVATE)
-        val dest = findViewById<EditText>(R.id.dest)
+        val toEmail = findViewById<EditText>(R.id.to_email)
+        val smtpUser = findViewById<EditText>(R.id.smtp_user)
+        val smtpPass = findViewById<EditText>(R.id.smtp_pass)
         val keyword = findViewById<EditText>(R.id.keyword)
         val enabled = findViewById<Switch>(R.id.enabled)
 
-        dest.setText(prefs.getString("dest", ""))
+        toEmail.setText(prefs.getString("to_email", ""))
+        smtpUser.setText(prefs.getString("smtp_user", ""))
+        smtpPass.setText(prefs.getString("smtp_pass", ""))
         keyword.setText(prefs.getString("keyword", "SBM"))
         enabled.isChecked = prefs.getBoolean("enabled", false)
 
-        enabled.setOnCheckedChangeListener { _, on ->
-            if (on && dest.text.isBlank()) {
-                enabled.isChecked = false
-                Toast.makeText(this, "Enter a destination number first", Toast.LENGTH_SHORT).show()
-                return@setOnCheckedChangeListener
-            }
-            if (on) requestPerms()
+        fun save(on: Boolean = enabled.isChecked) {
             prefs.edit()
-                .putString("dest", dest.text.toString().trim())
+                .putString("to_email", toEmail.text.toString().trim())
+                .putString("smtp_user", smtpUser.text.toString().trim())
+                .putString("smtp_pass", smtpPass.text.toString().replace(" ", ""))
                 .putString("keyword", keyword.text.toString().trim())
                 .putBoolean("enabled", on)
                 .apply()
         }
-        findViewById<android.widget.Button>(R.id.save).setOnClickListener {
-            prefs.edit()
-                .putString("dest", dest.text.toString().trim())
-                .putString("keyword", keyword.text.toString().trim())
-                .apply()
+
+        enabled.setOnCheckedChangeListener { _, on ->
+            if (on && (toEmail.text.isBlank() || smtpUser.text.isBlank() || smtpPass.text.isBlank())) {
+                enabled.isChecked = false
+                Toast.makeText(this, "Fill in all email fields first", Toast.LENGTH_SHORT).show()
+                return@setOnCheckedChangeListener
+            }
+            if (on) requestPerms()
+            save(on)
+        }
+        findViewById<Button>(R.id.save).setOnClickListener {
+            save()
             Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun requestPerms() {
-        val need = listOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS)
-            .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
-        if (need.isNotEmpty()) requestPermissions(need.toTypedArray(), 1)
+        if (checkSelfPermission(Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(arrayOf(Manifest.permission.RECEIVE_SMS), 1)
     }
 }

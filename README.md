@@ -1,23 +1,26 @@
 # SMS Forwarder (Android)
 
-Forwards any incoming SMS containing a keyword (default `SBM`, case-insensitive)
-to another number, automatically, in the background.
+Emails any incoming SMS containing a keyword (default `SBM`, case-insensitive)
+to an email address, automatically, in the background.
 
 ## Build
-1. Open the `sms-forwarder` folder in Android Studio and let Gradle sync.
-2. Run on your phone (USB debugging), or Build > Build APK(s) and install it.
+Push to `main` and download the `sms-forwarder-apk` artifact from the
+GitHub Actions run, or open the folder in Android Studio and run it.
 
-## Use
-1. Enter the destination number (with country code) and keyword, tap **Save**.
-2. Turn on **Forwarding enabled** and grant the SMS permissions.
+## Set up
+1. Create a Gmail **app password**: Google Account > Security > turn on 2-Step
+   Verification > App passwords. (Your normal Gmail password will not work.)
+2. In the app enter the destination email, your Gmail address, the app password
+   and the keyword, tap **Save**, then turn on **Forwarding enabled** and allow
+   the SMS permission.
 
-Forwarded text looks like: `From <sender>:` followed by the original message.
+The email subject is `SMS from <sender>` and the body is the original message.
 
 ## Notes
 - Android only; iOS does not allow this.
-- Each forward is sent as a normal SMS from your SIM, so your carrier may charge for it.
-- Messages from the destination number itself are skipped to prevent loops.
+- The phone needs internet access; each email is retried up to 3 times.
+- The app password is stored unencrypted in the app's private storage. Use a
+  dedicated Gmail account and revoke the app password if you lose the phone.
 - Some phones (Xiaomi, Oppo, Vivo, Samsung) kill background apps: set the app's
   battery to "Unrestricted" / allow autostart. If sideloaded on Android 13+, you may
-  need App info > ⋮ > "Allow restricted settings" before SMS permissions can be granted.
-- Play Store restricts SMS permissions, so this is meant for personal sideloading.
+  need App info > three dots > "Allow restricted settings" before SMS permission can be granted.
